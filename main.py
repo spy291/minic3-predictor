@@ -1,5 +1,5 @@
 """
-MINIC3 Predictor - 零依赖绘图版
+MINIC3 Predictor - 纯文本版
 """
 
 import streamlit as st
