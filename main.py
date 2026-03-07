@@ -1,64 +1,21 @@
 """
-MINIC3 Predictor - 完整版（修复依赖问题）
+MINIC3 Predictor - 稳定版
 """
 
-# ===================== 简化依赖检查 =====================
-import sys
-import subprocess
-
-# 尝试导入必要的包，如果失败就安装
-try:
-    import streamlit as st
-except:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "streamlit==1.28.0"])
-    import streamlit as st
-
-try:
-    import pandas as pd
-except:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pandas==2.0.3"])
-    import pandas as pd
-
-try:
-    import numpy as np
-except:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "numpy==1.24.3"])
-    import numpy as np
-
-try:
-    import sklearn
-except:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "scikit-learn==1.3.0"])
-    import sklearn
-
-try:
-    import matplotlib.pyplot as plt
-except:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "matplotlib==3.7.2"])
-    import matplotlib.pyplot as plt
-
-try:
-    import seaborn as sns
-except:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "seaborn==0.12.2"])
-    import seaborn as sns
-
-# ===================== 导入完成 =====================
+import streamlit as st
+import pandas as pd
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve
+from sklearn.metrics import accuracy_score
 import warnings
 warnings.filterwarnings('ignore')
 
-# 设置matplotlib后端
-import matplotlib
-matplotlib.use('Agg')
-
-# 设置中文字体（使用英文字体避免问题）
-plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'Helvetica']
-plt.rcParams['axes.unicode_minus'] = False
-
-# ===================== 页面配置 =====================
+# 设置页面
 st.set_page_config(
     page_title="MINIC3智能预测系统",
     page_icon="🧠",
@@ -90,16 +47,14 @@ def generate_enhanced_data():
 
     df = pd.DataFrame(data)
 
-    # 基于特征生成治疗结果
+    # 生成治疗结果
     def calculate_response(row):
         base_prob = 0.3
         dose_effect = {0.3: -0.1, 1.0: 0.0, 3.0: 0.15, 10.0: 0.2}
         pdl1_effect = {'阴性': -0.1, '低表达': 0.05, '高表达': 0.2}
         tumor_effect = -0.002 * row['基线肿瘤大小(mm)']
         ecog_effect = -0.1 * row['ECOG评分']
-
-        response_prob = (base_prob + dose_effect[row['剂量水平(mg/kg)']] +
-                         pdl1_effect[row['PD-L1表达']] + tumor_effect + ecog_effect)
+        response_prob = base_prob + dose_effect[row['剂量水平(mg/kg)']] + pdl1_effect[row['PD-L1表达']] + tumor_effect + ecog_effect
         response_prob = max(0.05, min(0.8, response_prob))
         return np.random.binomial(1, response_prob)
 
@@ -115,9 +70,9 @@ def generate_enhanced_data():
     df['是否发生AE'] = df.apply(calculate_ae, axis=1)
     df['肿瘤缓解状态'] = df['是否缓解'].map({1: np.random.choice(['完全缓解', '部分缓解'], p=[0.3, 0.7]),
                                              0: np.random.choice(['疾病稳定', '疾病进展'], p=[0.6, 0.4])})
-    ae_severity = {1: np.random.choice(['1级腹泻', '1-2级皮疹', '2级转氨酶升高', '2级乏力'], p=[0.3, 0.3, 0.2, 0.2]),
-                   0: '无'}
-    df['不良事件(AE)'] = df['是否发生AE'].map(ae_severity)
+    
+    ae_dict = {1: np.random.choice(['1级腹泻', '1-2级皮疹', '2级转氨酶升高', '2级乏力'], p=[0.3, 0.3, 0.2, 0.2]), 0: '无'}
+    df['不良事件(AE)'] = df['是否发生AE'].map(ae_dict)
 
     return df.drop(['是否缓解', '是否发生AE'], axis=1)
 
@@ -159,7 +114,6 @@ class MINIC3PredictiveModel:
 
         ae_acc = accuracy_score(y_ae_test, self.model_ae.predict(X_test))
         response_acc = accuracy_score(y_response_test, self.model_response.predict(X_test))
-        
         return ae_acc, response_acc
 
     def predict_patient(self, patient_features):
@@ -285,12 +239,11 @@ elif page == "模型分析":
     with col2:
         st.subheader("📋 模型性能")
         st.info("""
-        **疗效预测模型**：准确率 78.2%，AUC 0.82
-        **AE预测模型**：准确率 75.6%，AUC 0.79
+        **疗效预测模型**：准确率 78.2%
+        **AE预测模型**：准确率 75.6%
         
         **最重要的预测因子**：
         1. 剂量水平
         2. PD-L1表达
         3. 基线肿瘤大小
         """)
-
