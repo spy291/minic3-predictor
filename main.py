@@ -4,7 +4,7 @@ MINIC3 Predictor - 完整版（修复依赖问题）
 
 # ===================== 简化依赖检查 =====================
 import sys
-import subpackages
+import subprocess
 
 # 尝试导入必要的包，如果失败就安装
 try:
@@ -293,3 +293,4 @@ elif page == "模型分析":
         2. PD-L1表达
         3. 基线肿瘤大小
         """)
+
