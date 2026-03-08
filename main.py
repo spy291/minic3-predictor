@@ -29,7 +29,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # 设置页面
- st.set_page_config(
+st.set_page_config(
     page_title="MINIC3智能预测系统",
     page_icon="🧠",
     layout="wide"
@@ -273,5 +273,6 @@ elif page == "模型分析":
         2. PD-L1表达
         3. 基线肿瘤大小
         """)
+
 
 
