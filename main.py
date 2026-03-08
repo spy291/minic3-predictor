@@ -2,21 +2,18 @@ import sys
 import subprocess
 import importlib
 
-# 自动安装需要的包（放在最前面）
-required = {
-    'scikit-learn': 'sklearn',
-    'pandas': 'pandas',
-    'numpy': 'numpy',
-    'streamlit': 'streamlit',
-    'matplotlib': 'matplotlib',
-    'seaborn': 'seaborn'
-}
-
-for pkg_name, import_name in required.items():
-    try:
-        importlib.import_module(import_name)
-    except ImportError:
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', pkg_name, '--quiet'])
+import streamlit as st
+import pandas as pd
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+import warnings
+warnings.filterwarnings('ignore')
 
 # ==================== 正式代码开始 ====================
 import streamlit as st
@@ -275,3 +272,4 @@ elif page == "模型分析":
         2. PD-L1表达
         3. 基线肿瘤大小
         """)
+
